@@ -1,4 +1,7 @@
-﻿Configuration AzureS2S
+﻿#TODO:  Move config values to ConfigData file
+#NOTE:  Values below are examples and will not actually work.  Replace with real values from Azure network for your subscription.
+
+Configuration AzureS2S
 {
     Import-DscResource -ModuleName 'xRemoteAccess','PSDesiredStateConfiguration'
     node localhost
@@ -39,7 +42,6 @@
             Name = '104.209.36.168'
             Destination = '104.209.36.168'
             IPv4Subnet = '10.0.1.0/24:100'
-            #This should accept array values
             SharedSecret = 'jclab5N6fYtWjp17ZfnObZTnEABTcbgH'
             InitiateConfigPayload = $false
             DependsOn = '[RemoteAccess]VpnS2S'
