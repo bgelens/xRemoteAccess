@@ -1,10 +1,9 @@
-﻿#TODO:  Move config values to ConfigData file
-#NOTE:  Values below are examples and will not actually work.  Replace with real values from Azure network for your subscription.
+﻿#NOTE:  Values below are examples and will not actually work.  Replace with real values from Azure network for your subscription.
 
 Configuration AzureS2S
 {
     Import-DscResource -ModuleName 'xRemoteAccess','PSDesiredStateConfiguration'
-    node localhost
+    Node $AllNodes.where{$_.Role -eq 'LocalNetworkS2SGateway'}.NodeName
     {
         LocalConfigurationManager        {            RebootNodeIfNeeded = $true        }
         WindowsFeature Routing
@@ -39,10 +38,10 @@ Configuration AzureS2S
             AuthenticationMethod = 'PSKOnly'
             NumberOfTries = 3
             ResponderAuthenticationMethod = 'PSKOnly'
-            Name = '104.209.36.168'
-            Destination = '104.209.36.168'
-            IPv4Subnet = '10.0.1.0/24:100'
-            SharedSecret = 'jclab5N6fYtWjp17ZfnObZTnEABTcbgH'
+            Name = $node.AzureNetworkIP
+            Destination = $node.AzureNetworkIP
+            IPv4Subnet = $node.AzureIPv4Subnet
+            SharedSecret = $node.AzureNetworkSharedSecret
             InitiateConfigPayload = $false
             DependsOn = '[RemoteAccess]VpnS2S'
         }
@@ -54,12 +53,14 @@ Configuration AzureS2S
         VpnS2SInterfaceConnection Connect
         {
             Ensure = 'Present'
-            Name = '104.209.36.168'
+            Name = $node.AzureNetworkIP
             DependsOn = '[VpnServerIPsecConfiguration]MaximumEncryption'
         }
     }
 }
 
-AzureS2S -out c:\DSC\RRAS
-Set-DscLocalConfigurationManager -Path c:\DSC\RRAS -Verbose
-Start-DscConfiguration -Wait -Path c:\DSC\RRAS -Verbose
+$outPath = 'c:\DSC\AzureS2S'
+
+AzureS2S -configurationdata ConfigurationData.psd1 -out $outPath
+Set-DscLocalConfigurationManager -Path $outPath -Verbose
+Start-DscConfiguration -Wait -Path $outPath -Verbose
